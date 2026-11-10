@@ -111,6 +111,12 @@ document.addEventListener('visibilitychange',()=>{clearInput();if(document.hidde
 canvas.addEventListener('pointerdown',e=>{if(mode==='welcome'||!ready||e.button!==0)return;takeOver();drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);canvas.focus({preventScroll:true});});
 canvas.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;targetYaw-=(e.clientX-drag.x)*.003*sensitivity;targetPitch-=(e.clientY-drag.y)*.0025*sensitivity;targetPitch=THREE.MathUtils.clamp(targetPitch,-.65,.9);drag.x=e.clientX;drag.y=e.clientY;});
 for(const event of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(event,()=>drag=null);
+// Mouse look: click the scene to capture the pointer (first-person style). Dragging still
+// works on touch, with a pen, or when the browser refuses capture. Esc releases the pointer.
+let locked=false;
+canvas.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||locked||mode==='welcome'||!ready)return;const p=canvas.requestPointerLock?.();if(p&&p.catch)p.catch(()=>{});});
+document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==canvas)return;targetYaw-=e.movementX*.0022*sensitivity;targetPitch=THREE.MathUtils.clamp(targetPitch-e.movementY*.0018*sensitivity,-.65,.9);});
+document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===canvas;if(on===locked)return;locked=on;drag=null;if(on){takeOver();announce('Mouse captured. Move to look; press Esc to release.',false);}});
 for(const b of document.querySelectorAll('[data-move]')){
   b.addEventListener('pointerdown',e=>{e.preventDefault();takeOver();b.setPointerCapture(e.pointerId);touchMove.add(b.dataset.move);});
   for(const event of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(event,()=>touchMove.delete(b.dataset.move));
