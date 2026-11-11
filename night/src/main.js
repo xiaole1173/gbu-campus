@@ -11,14 +11,14 @@ import './style.css';
 const root=document.querySelector('#scene'),audio=createAudio();
 let ready=false,game,world,demo=null,mode='title',quality='Smooth',sound=true,mapOpen=false,frame=0;
 let renderScale=.8,last=0,accumulator=0,uiClock=0,adaptClock=0,elapsed=0,freeze=false,reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
-let fps=60,frames=[],frameMetrics={mean:16.7,p95:16.7},drag=null,stepBob=0,qualityWarmup=8;
+let fps=60,frames=[],frameMetrics={mean:16.7,p95:16.7},drag=null,locked=false,stepBob=0,qualityWarmup=8;
 const key=new Set(),touch={x:0,z:0,interact:false,run:false},lookVector=new THREE.Vector3(),moonColor=new THREE.Color(0xa9cfdf);
 const scene=new THREE.Scene();scene.background=new THREE.Color(0x172c3d);scene.fog=new THREE.Fog(0x243b47,80,355);
 const camera=new THREE.PerspectiveCamera(67,innerWidth/innerHeight,.08,600);camera.rotation.order='YXZ';scene.add(camera);
 const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance',alpha:false});
 renderer.setClearColor(0x172c3d);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.18;
 renderer.shadowMap.enabled=false;renderer.setPixelRatio(renderScale);renderer.setSize(innerWidth,innerHeight);root.appendChild(renderer.domElement);
-renderer.domElement.setAttribute('aria-label','Three-dimensional haunted campus. Drag to look; WASD to walk, Shift to sprint, Space to kick.');renderer.domElement.tabIndex=0;
+renderer.domElement.setAttribute('aria-label','Three-dimensional haunted campus. Click the scene to capture the mouse, then move to look; WASD to walk, Shift to sprint, Space to kick. Esc releases the mouse.');renderer.domElement.tabIndex=0;
 const hemi=new THREE.HemisphereLight(0xbadce8,0x41544a,2.15);scene.add(hemi);
 const moon=new THREE.DirectionalLight(moonColor,2.0);moon.position.set(-38,58,-25);scene.add(moon);
 const torch=new THREE.SpotLight(0xffe3ac,45,31,.52,.6,1.1);scene.add(torch,torch.target);
@@ -76,6 +76,11 @@ if(import.meta.hot)import.meta.hot.dispose(()=>audio.dispose());
 renderer.domElement.addEventListener('pointerdown',e=>{if(mode!=='playing'||mapOpen||demo)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};renderer.domElement.setPointerCapture(e.pointerId);audio.unlock();});
 renderer.domElement.addEventListener('pointermove',e=>{if(!drag||drag.id!==e.pointerId)return;look(e.clientX-drag.x,e.clientY-drag.y);drag.x=e.clientX;drag.y=e.clientY;});
 for(const name of ['pointerup','pointercancel','lostpointercapture'])renderer.domElement.addEventListener(name,()=>drag=null);
+// Mouse look: click the scene to capture the pointer (first-person style); Esc releases it.
+// Dragging still works on touch, with a pen, or when the browser refuses capture.
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse'||e.button!==0||locked||mode!=='playing'||mapOpen||demo)return;const p=renderer.domElement.requestPointerLock?.();if(p&&p.catch)p.catch(()=>{});});
+document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==renderer.domElement)return;look(e.movementX,e.movementY);});
+document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===renderer.domElement;if(on===locked)return;locked=on;drag=null;});
 function resize(){renderer.setPixelRatio(Math.min(devicePixelRatio,quality==='Detail'?1.25:renderScale));renderer.setSize(innerWidth,innerHeight);camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();}addEventListener('resize',resize);
 function input(){return {x:touch.x+(key.has('KeyD')||key.has('ArrowRight')?1:0)-(key.has('KeyA')||key.has('ArrowLeft')?1:0),z:touch.z+(key.has('KeyW')||key.has('ArrowUp')?1:0)-(key.has('KeyS')||key.has('ArrowDown')?1:0),run:touch.run||key.has('ShiftLeft')||key.has('ShiftRight'),interact:touch.interact||key.has('KeyE')};}
 function updateUI(){

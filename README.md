@@ -13,6 +13,8 @@ One campus website with two modes: on GitHub Pages, **Day tour** opens at `/worl
 
 The rebuilt campus follows the physical model: towers at one end, the crescent and garden in the middle, and sports buildings and dormitories at the other. Day tour offers six landmark stops and a guided campus walk. Haunted night adds four location-specific challenges: restore the water reflection, listen in the west teaching block, complete a timed blue-track lap, and replay the dormitory melody. It retains GBU-shirt zombie students, blood loss, kicks, slowly reassembling limbs and touch controls; the kick now uses a photographic running shoe and trousers. Select **Watch demo** from the night title screen.
 
+**Looking around.** Click the 3D scene to capture the mouse, then move it to look as in a first-person game; press <kbd>Esc</kbd> to release the pointer. Dragging the scene still works on touch screens, with a pen, and in browsers that refuse to capture the pointer. Known limit: while the pointer is captured, the page buttons cannot be clicked, so press <kbd>Esc</kbd> first; the pause/help keys (Esc, H, M) still work.
+
 Night audio shuts down completely on victory, defeat, quit or exit. Pause, mute and leaving the game window suspend its audio engine, including during demos. Continue or Retry restores sound only for active gameplay. See `artifacts/audio-shutdown-evidence.md` for the focused checks and rollout status. Refresh an already-open game tab after an update to load the latest version.
 
 ## Run locally
